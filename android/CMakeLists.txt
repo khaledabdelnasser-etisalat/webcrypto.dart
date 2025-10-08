@@ -36,6 +36,21 @@ include(
 # https://boringssl.googlesource.com/boringssl/+/HEAD/BUILDING.md#binary-size
 add_definitions(-DOPENSSL_SMALL)
 
+# Support for 16KB page size (Android 15+)
+if(ANDROID)
+    add_definitions(-D__ANDROID_MIN_SDK_VERSION__=21)
+    # Enable flexible page size support for Android 15+
+    add_definitions(-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON)
+    # Set 16KB page size for native compilation
+    set(CMAKE_ANDROID_PAGE_SIZE 16384)
+
+    # Apply ARM-specific optimizations only for ARM architectures
+    if(ANDROID_ABI STREQUAL "armeabi-v7a" OR ANDROID_ABI STREQUAL "arm64-v8a")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a+crypto")
+    endif()
+endif()
+
 # TODO: Enable link time optimization
 #       Requires fixing https://github.com/google/webcrypto.dart/issues/80
 # set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -flto")
