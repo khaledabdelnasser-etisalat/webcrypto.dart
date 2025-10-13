@@ -43,6 +43,9 @@ if(ANDROID)
     add_definitions(-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON)
     # Set 16KB page size for native compilation
     set(CMAKE_ANDROID_PAGE_SIZE 16384)
+    
+    # Explicitly set linker flags for 16KB page size alignment
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
 
     # Apply ARM-specific optimizations only for ARM architectures
     if(ANDROID_ABI STREQUAL "armeabi-v7a" OR ANDROID_ABI STREQUAL "arm64-v8a")
