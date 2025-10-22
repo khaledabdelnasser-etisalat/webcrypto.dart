@@ -29,30 +29,12 @@ set(BORINGSSL_ROOT ../third_party/boringssl/)
 #  - crypto_sources_linux_x86
 #  - crypto_sources_linux_x86_64
 include(
-  ../third_party/boringssl/sources.cmake
+        ../third_party/boringssl/sources.cmake
 )
 
 # Tradeoff performance for smaller binary size, see:
 # https://boringssl.googlesource.com/boringssl/+/HEAD/BUILDING.md#binary-size
 add_definitions(-DOPENSSL_SMALL)
-
-# Support for 16KB page size (Android 15+)
-if(ANDROID)
-    add_definitions(-D__ANDROID_MIN_SDK_VERSION__=21)
-    # Enable flexible page size support for Android 15+
-    add_definitions(-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON)
-    # Set 16KB page size for native compilation
-    set(CMAKE_ANDROID_PAGE_SIZE 16384)
-    
-    # Explicitly set linker flags for 16KB page size alignment
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
-
-    # Apply ARM-specific optimizations only for ARM architectures
-    if(ANDROID_ABI STREQUAL "armeabi-v7a" OR ANDROID_ABI STREQUAL "arm64-v8a")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv8-a+crypto")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a+crypto")
-    endif()
-endif()
 
 # TODO: Enable link time optimization
 #       Requires fixing https://github.com/google/webcrypto.dart/issues/80
@@ -62,45 +44,45 @@ endif()
 # Android ABIs, see also:
 # https://developer.android.com/ndk/guides/abis
 if(ANDROID_ABI STREQUAL "armeabi-v7a")
-  set(crypto_sources_ARCH ${crypto_sources_linux_arm})
+    set(crypto_sources_ARCH ${crypto_sources_linux_arm})
 elseif ( ANDROID_ABI STREQUAL "arm64-v8a")
-  set(crypto_sources_ARCH ${crypto_sources_linux_aarch64})
+    set(crypto_sources_ARCH ${crypto_sources_linux_aarch64})
 elseif ( ANDROID_ABI STREQUAL "x86")
-  set(crypto_sources_ARCH ${crypto_sources_linux_x86})
+    set(crypto_sources_ARCH ${crypto_sources_linux_x86})
 elseif ( ANDROID_ABI STREQUAL "x86_64")
-  set(crypto_sources_ARCH ${crypto_sources_linux_x86_64})
+    set(crypto_sources_ARCH ${crypto_sources_linux_x86_64})
 else()
-  # If we can't match an architecture, we just disable assembler optimizations
-  set(crypto_sources_ARCH)
-  add_definitions(-DOPENSSL_NO_ASM)
+    # If we can't match an architecture, we just disable assembler optimizations
+    set(crypto_sources_ARCH)
+    add_definitions(-DOPENSSL_NO_ASM)
 endif()
 
 add_library(
-  webcrypto
-  
-  # Build a shared library
-  SHARED
-  
-  # Source files
-  ../src/webcrypto.c
-  ../src/symbols.generated.c
-  ${crypto_sources}
-  ${crypto_sources_ARCH}
+        webcrypto
+
+        # Build a shared library
+        SHARED
+
+        # Source files
+        ../src/webcrypto.c
+        ../src/symbols.generated.c
+        ${crypto_sources}
+        ${crypto_sources_ARCH}
 )
 
 target_include_directories(
-  webcrypto
+        webcrypto
 
-  PRIVATE
+        PRIVATE
 
-  ../third_party/boringssl/src/include/
+        ../third_party/boringssl/src/include/
 )
 
 set_target_properties(
-  webcrypto
+        webcrypto
 
-  PROPERTIES
-  
-  C_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN 1
+        PROPERTIES
+
+        C_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN 1
 )
